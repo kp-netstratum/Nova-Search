@@ -1,189 +1,102 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap");
+@import "tailwindcss";
 
-:root {
-  --bg-color: #0f172a;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent-color: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.3);
+@theme {
+  --color-bg-color: #0f172a;
+  --color-glass-bg: rgba(255, 255, 255, 0.05);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-accent-color: #38bdf8;
+  --color-accent-glow: rgba(56, 189, 248, 0.3);
+
   --font-main: "Outfit", sans-serif;
-}
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+  --animate-fade-in: fadeIn 0.4s ease forwards;
+  --animate-spin-slow: spin 1s linear infinite;
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  font-family: var(--font-main);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: hidden;
-  background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
-}
-
-#root {
-  width: 100%;
-  max-width: 1200px;
-  padding: 2rem;
-  display: flex;
-  justify-content: center;
-}
-
-.glass-container {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.3s ease;
-}
-
-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  color: white;
-  font-size: 1.1rem;
-  width: 100%;
-  outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-input:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 15px var(--accent-glow);
-}
-
-button {
-  background: var(--accent-color);
-  color: var(--bg-color);
-  border: none;
-  border-radius: 12px;
-  padding: 1rem 2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-.search-results {
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.result-card {
-  padding: 1.5rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--glass-border);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.result-card:hover {
-  transform: scale(1.01);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.result-card h3 {
-  color: var(--accent-color);
-  margin-bottom: 0.5rem;
-}
-
-.result-card a {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.result-card p {
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+/* Custom Base Styles */
+@layer base {
+  body {
+    @apply bg-bg-color text-text-primary font-main min-h-screen flex justify-center items-center overflow-x-hidden;
+    background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
   }
-  to {
-    transform: rotate(360deg);
+}
+
+/* Custom Components / Utilities */
+@layer components {
+  .glass-container {
+    @apply bg-glass-bg backdrop-blur-xl border border-glass-border rounded-3xl p-12 shadow-2xl transition-all duration-300;
+  }
+
+  .glass-input {
+    @apply w-full bg-white/5 border border-glass-border rounded-xl px-6 py-4 text-white text-lg outline-none transition-all duration-300;
+  }
+
+  .glass-input:focus {
+    @apply border-accent-color ring-2 ring-accent-glow;
+  }
+
+  .glass-button {
+    @apply bg-accent-color text-bg-color border-none rounded-xl px-8 py-4 font-semibold cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0;
+  }
+
+  /* Result Card specific styles that are reused */
+  .result-card {
+    @apply p-6 rounded-2xl bg-white/5 border border-glass-border transition-all duration-200 hover:scale-[1.01] hover:bg-white/10;
+  }
+
+  .result-card h3 {
+    @apply text-accent-color mb-2;
+  }
+
+  .result-card a {
+    @apply text-sm text-text-secondary no-underline block mb-2;
+  }
+
+  .result-card p {
+    @apply leading-relaxed text-text-secondary;
+  }
+
+  .result-card b {
+    @apply text-accent-color bg-accent-color/10 px-1 rounded;
+  }
+
+  /* Loader */
+  .loader {
+    @apply border-[3px] border-white/10 rounded-full border-t-accent-color w-6 h-6 inline-block align-middle animate-spin-slow;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-glass-border);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
   }
 }
 
-.loader {
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  border-top: 3px solid var(--accent-color);
-  width: 1.5rem;
-  height: 1.5rem;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.fade-in {
-  animation: fadeIn 0.4s ease forwards;
-}
-
-/* Highlights from Whoosh */
-.result-card b {
-  color: var(--accent-color);
-  background: rgba(56, 189, 248, 0.1);
-  padding: 0 4px;
-  border-radius: 4px;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* Markdown Viewer Styles */
+/* Markdown Viewer Styles - keeping these semantic for parsed content */
 .markdown-viewer {
-  font-family: var(--font-main);
+  @apply font-main;
 }
 
 .markdown-viewer h1,
@@ -192,123 +105,74 @@ button:active {
 .markdown-viewer h4,
 .markdown-viewer h5,
 .markdown-viewer h6 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: 700;
-  line-height: 1.2;
+  @apply mt-6 mb-3 font-bold leading-tight;
 }
 
 .markdown-viewer h1 {
-  font-size: 2rem;
-  border-bottom: 2px solid rgba(56, 189, 248, 0.3);
-  padding-bottom: 0.5rem;
+  @apply text-3xl border-b-2 border-accent-color/30 pb-2;
 }
 
 .markdown-viewer h2 {
-  font-size: 1.5rem;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-  padding-bottom: 0.3rem;
+  @apply text-2xl border-b border-accent-color/20 pb-1;
 }
 
 .markdown-viewer h3 {
-  font-size: 1.25rem;
+  @apply text-xl;
 }
-
 .markdown-viewer h4 {
-  font-size: 1.1rem;
+  @apply text-lg;
 }
 
 .markdown-viewer p {
-  margin-bottom: 1rem;
-  line-height: 1.7;
+  @apply mb-4 leading-relaxed;
 }
 
 .markdown-viewer ul,
 .markdown-viewer ol {
-  margin: 1rem 0;
-  padding-left: 2rem;
+  @apply my-4 pl-8 list-disc;
 }
 
 .markdown-viewer li {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
+  @apply mb-2 leading-relaxed;
 }
 
 .markdown-viewer blockquote {
-  border-left: 4px solid var(--accent-color);
-  padding: 0.75rem 1rem;
-  margin: 1rem 0;
-  background: rgba(56, 189, 248, 0.05);
-  border-radius: 4px;
-  font-style: italic;
+  @apply border-l-4 border-accent-color p-3 my-4 bg-accent-color/5 rounded italic;
 }
 
 .markdown-viewer code {
-  background: rgba(0, 0, 0, 0.4);
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-family: "Courier New", monospace;
-  font-size: 0.9em;
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  @apply bg-black/40 px-1.5 py-0.5 rounded font-mono text-sm text-emerald-500 border border-emerald-500/20;
 }
 
 .markdown-viewer pre {
-  background: rgba(0, 0, 0, 0.5);
-  padding: 1rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin: 1rem 0;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  @apply bg-black/50 p-4 rounded-lg overflow-x-auto my-4 border border-accent-color/20;
 }
 
 .markdown-viewer pre code {
-  background: transparent;
-  padding: 0;
-  border: none;
-  color: #10b981;
+  @apply bg-transparent p-0 border-none text-emerald-500;
 }
 
 .markdown-viewer a {
-  color: var(--accent-color);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.2s;
-}
-
-.markdown-viewer a:hover {
-  color: #60a5fa;
+  @apply text-accent-color underline underline-offset-2 transition-colors hover:text-blue-400;
 }
 
 .markdown-viewer img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin: 1rem 0;
-  border: 1px solid var(--glass-border);
+  @apply max-w-full h-auto rounded-lg my-4 border border-glass-border;
 }
 
 .markdown-viewer hr {
-  border: none;
-  border-top: 1px solid var(--glass-border);
-  margin: 2rem 0;
+  @apply border-none border-t border-glass-border my-8;
 }
 
 .markdown-viewer table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
+  @apply w-full border-collapse my-4;
 }
 
 .markdown-viewer table th,
 .markdown-viewer table td {
-  padding: 0.5rem;
-  border: 1px solid var(--glass-border);
-  text-align: left;
+  @apply p-2 border border-glass-border text-left;
 }
 
 .markdown-viewer table th {
-  background: rgba(56, 189, 248, 0.1);
-  font-weight: 600;
-  color: var(--accent-color);
+  @apply bg-accent-color/10 font-semibold text-accent-color;
 }

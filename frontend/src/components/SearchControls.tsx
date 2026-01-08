@@ -1,86 +1,66 @@
 import React from "react";
-
-type SearchMode = "live" | "local" | "site";
+import { NavLink } from "react-router-dom";
 
 interface SearchControlsProps {
-  searchMode: SearchMode;
-  setSearchMode: (mode: SearchMode) => void;
   setResults: (results: any[]) => void;
   setStatus: (status: string) => void;
 }
 
 const SearchControls: React.FC<SearchControlsProps> = ({
-  searchMode,
-  setSearchMode,
   setResults,
   setStatus,
 }) => {
-  const modes: { id: SearchMode; label: string }[] = [
-    { id: "live", label: "Live Search" },
-    { id: "local", label: "Local Index" },
-    { id: "site", label: "Direct Site" },
+  const modes = [
+    {
+      path: "/live",
+      label: "Live Search",
+      desc: "Uses DuckDuckGo to browse the global internet.",
+    },
+    {
+      path: "/local",
+      label: "Local Index",
+      desc: "Searches through your previously indexed websites.",
+    },
+    {
+      path: "/site",
+      label: "Direct Site",
+      desc: "Crawls the entire website, stores data locally, then searches the stored index.",
+    },
   ];
 
   return (
     <>
-      <section
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            padding: "0.25rem",
-            borderRadius: "12px",
-            display: "flex",
-            gap: "0.25rem",
-            border: "1px solid var(--glass-border)",
-          }}
-        >
+      <section className="flex justify-center mb-4">
+        <div className="bg-white/5 p-1 rounded-xl flex gap-1 border border-glass-border">
           {modes.map((mode) => (
-            <button
-              key={mode.id}
+            <NavLink
+              key={mode.path}
+              to={mode.path}
               onClick={() => {
-                setSearchMode(mode.id);
                 setResults([]);
                 setStatus("");
               }}
-              style={{
-                background:
-                  searchMode === mode.id
-                    ? "var(--accent-color)"
-                    : "transparent",
-                color: searchMode === mode.id ? "var(--bg-color)" : "white",
-                padding: "0.5rem 1.5rem",
-                borderRadius: "8px",
-                transition: "all 0.3s",
-              }}
+              className={({ isActive }) =>
+                `px-6 py-2 rounded-lg transition-all duration-300 ${
+                  isActive
+                    ? "bg-accent-color text-bg-color shadow-md transform scale-105"
+                    : "bg-transparent text-white hover:bg-white/5"
+                }`
+              }
             >
               {mode.label}
-            </button>
+            </NavLink>
           ))}
         </div>
       </section>
 
-      <p
-        style={{
-          textAlign: "center",
-          fontSize: "0.85rem",
-          color: "var(--text-secondary)",
-          marginBottom: "2rem",
-          minHeight: "1.2rem",
-        }}
-      >
-        {searchMode === "live" &&
-          "Uses DuckDuckGo to browse the global internet."}
-        {searchMode === "local" &&
-          "Searches through your previously indexed websites."}
-        {searchMode === "site" &&
-          "Crawls the entire website, stores data locally, then searches the stored index."}
-      </p>
+      {/* Description can optionally be moved to the View or kept here if we have active route access. 
+          For simplicity, we can let the view handle specific descriptions or use useLocation here. 
+          But keeping it stateless here is cleaner if we just drop this description or move it.
+          The user wanted tabs. I'll keep the description here using NavLink matching or just let the View show it?
+          Let's keep it simple and removed the description text block to clean up the UI, 
+          OR we can use a helper to show the active description. 
+      */}
     </>
   );
 };

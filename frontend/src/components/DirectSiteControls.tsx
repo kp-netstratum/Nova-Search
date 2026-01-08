@@ -18,34 +18,16 @@ const DirectSiteControls: React.FC<DirectSiteControlsProps> = ({
   isCrawling,
 }) => {
   return (
-    <div
-      className="fade-in"
-      style={{
-        marginBottom: "1rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-      }}
-    >
+    <div className="fade-in mb-4 flex flex-col gap-4">
       <input
         type="text"
         placeholder="Target Website URL (e.g., https://example.com)"
         value={targetSite}
         onChange={(e) => setTargetSite(e.target.value)}
-        style={{
-          borderStyle: "dashed",
-          borderColor: "var(--accent-color)",
-          opacity: 0.8,
-        }}
+        className="glass-input border-dashed border-accent-color/50 opacity-80 focus:opacity-100"
       />
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        <label
-          style={{
-            color: "var(--text-secondary)",
-            fontSize: "0.9rem",
-            whiteSpace: "nowrap",
-          }}
-        >
+      <div className="flex items-center gap-4">
+        <label className="text-text-secondary text-sm whitespace-nowrap">
           Max Pages:
         </label>
         <input
@@ -58,34 +40,20 @@ const DirectSiteControls: React.FC<DirectSiteControlsProps> = ({
               Math.max(1, Math.min(500, parseInt(e.target.value) || 15))
             )
           }
-          style={{
-            width: "70px",
-            padding: "0.5rem",
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid var(--glass-border)",
-            borderRadius: "8px",
-            color: "white",
-            fontSize: "0.9rem",
-          }}
+          className="w-[70px] p-2 bg-white/5 border border-glass-border rounded-lg text-white text-sm focus:outline-none focus:border-accent-color transition-colors"
         />
         <button
           type="button"
           onClick={handleCrawl}
           disabled={isCrawling || !targetSite}
-          style={{
-            padding: "0.5rem 1rem",
-            background: isCrawling
-              ? "rgba(56, 189, 248, 0.1)"
-              : "var(--accent-color)",
-            color: isCrawling ? "rgba(255,255,255,0.5)" : "#000",
-            border: "none",
-            borderRadius: "8px",
-            cursor: isCrawling || !targetSite ? "not-allowed" : "pointer",
-            fontWeight: "600",
-            whiteSpace: "nowrap",
-            transition: "all 0.2s",
-            minWidth: "120px",
-          }}
+          className={`
+            px-4 py-2 rounded-lg font-semibold whitespace-nowrap min-w-[120px] transition-all
+            ${
+              isCrawling || !targetSite
+                ? "bg-sky-500/10 text-white/50 cursor-not-allowed"
+                : "bg-accent-color text-black hover:-translate-y-0.5"
+            }
+          `}
         >
           {isCrawling ? "Indexing..." : "Start Indexing"}
         </button>

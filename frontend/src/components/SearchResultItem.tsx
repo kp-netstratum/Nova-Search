@@ -19,42 +19,31 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({
 }) => {
   return (
     <div
-      className="result-card fade-in"
-      style={{ animationDelay: `${index * 0.1}s`, position: "relative" }}
+      className="result-card fade-in relative"
+      style={{ animationDelay: `${index * 0.1}s` }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
+      <div className="flex justify-between items-start">
         <div>
-          <h3>{result.title}</h3>
-          <a href={result.url} target="_blank" rel="noreferrer">
+          <h3 className="font-semibold">{result.title}</h3>
+          <a
+            href={result.url}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:underline hover:text-accent-color"
+          >
             {result.url}
           </a>
         </div>
         <button
           onClick={() => onScrape(result.url)}
-          style={{
-            padding: "0.4rem 0.8rem",
-            fontSize: "0.7rem",
-            background: "rgba(56, 189, 248, 0.1)",
-            color: "var(--accent-color)",
-            border: "1px solid var(--accent-color)",
-          }}
+          className="px-3 py-1.5 text-xs font-semibold bg-sky-500/10 text-accent-color border border-accent-color rounded hover:bg-sky-500/20 transition-all cursor-pointer"
         >
           Scrape JSON
         </button>
       </div>
       <p
         dangerouslySetInnerHTML={{ __html: result.snippet }}
-        style={{
-          color: "var(--text-secondary)",
-          marginTop: "0.5rem",
-          fontSize: "0.95rem",
-        }}
+        className="mt-2 text-text-secondary text-sm leading-relaxed"
       />
     </div>
   );

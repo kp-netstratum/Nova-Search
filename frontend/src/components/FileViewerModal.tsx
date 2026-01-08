@@ -24,6 +24,15 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   isLoading,
   onFormatChange,
 }) => {
+  React.useEffect(() => {
+    if (content) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [content]);
+
   if (!content) return null;
 
   const tabs: { id: ViewFormat; label: string }[] = [];
@@ -37,25 +46,8 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: "var(--text-secondary)",
-          }}
-        >
-          <div
-            className="loader"
-            style={{
-              width: "3rem",
-              height: "3rem",
-              borderWidth: "4px",
-              marginBottom: "1rem",
-            }}
-          />
+        <div className="flex flex-col items-center justify-center h-full text-text-secondary py-24">
+          <div className="loader w-12 h-12 mb-4" />
           <p>Loading content...</p>
         </div>
       );
@@ -87,101 +79,41 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
           overflowY: "auto",
           boxSizing: "border-box",
         }}
+        // Note: MarkdownViewer likely needs refactoring or uses internal styles.
+        // Based on previous reads, it takes a style prop but we might want to check it later.
+        // For now, passing className might be better if it supports it, but preserving style ensures safety.
+        // Actually, let's try to mix Tailwind classes if possible, but the wrapper is what matters most here.
       />
     );
   };
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        zIndex: 1001,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "1rem",
-        animation: "fadeIn 0.3s ease",
-      }}
+      className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1001] flex justify-center items-center p-4 animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div
-        className="glass-container fade-in"
-        style={{
-          width: "100%",
-          maxWidth: "1000px",
-          maxHeight: "95vh",
-          overflow: "hidden",
-          padding: 0,
-          border: "2px solid var(--accent-color)",
-          boxShadow: "0 20px 60px rgba(56, 189, 248, 0.3)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "1rem 2rem",
-            borderBottom: "1px solid var(--glass-border)",
-            background: "rgba(56, 189, 248, 0.05)",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0, marginRight: "1rem" }}>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: "1.1rem",
-                color: "var(--text-primary)",
-                fontWeight: "600",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+      <div className="glass-container w-full max-w-5xl max-h-[95vh] flex flex-col p-0 overflow-hidden shadow-2xl shadow-sky-400/20 border-accent-color border-2 relative">
+        <div className="flex justify-between items-center px-8 py-4 border-b border-glass-border bg-sky-500/5">
+          <div className="flex-1 min-w-0 mr-4">
+            <h2 className="text-lg font-semibold text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
               {content.title}
             </h2>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              background: "rgba(255,255,255,0.05)",
-              padding: "0.25rem",
-              borderRadius: "8px",
-            }}
-          >
+          <div className="flex gap-2 bg-white/5 p-1 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onFormatChange(tab.id)}
-                style={{
-                  padding: "0.4rem 1rem",
-                  fontSize: "0.85rem",
-                  background:
-                    content.format === tab.id
-                      ? "var(--accent-color)"
-                      : "transparent",
-                  color:
-                    content.format === tab.id
-                      ? "#000"
-                      : "var(--text-secondary)",
-                  borderRadius: "6px",
-                  fontWeight: "600",
-                }}
+                className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
+                  content.format === tab.id
+                    ? "bg-accent-color text-bg-color shadow-sm"
+                    : "bg-transparent text-text-secondary hover:text-white"
+                }`}
               >
                 {tab.label}
               </button>
@@ -190,22 +122,13 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
 
           <button
             onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "var(--text-secondary)",
-              fontSize: "1.5rem",
-              cursor: "pointer",
-              padding: "0.5rem",
-              lineHeight: 1,
-              marginLeft: "1rem",
-            }}
+            className="bg-transparent text-text-secondary hover:text-white text-2xl p-2 leading-none ml-4 border-none shadow-none translate-y-0"
           >
             ×
           </button>
         </div>
 
-        <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+        <div className="flex-1 overflow-hidden relative bg-black/20 overflow-y-auto">
           {renderContent()}
         </div>
       </div>

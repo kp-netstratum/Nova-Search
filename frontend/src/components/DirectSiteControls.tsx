@@ -31,15 +31,22 @@ const DirectSiteControls: React.FC<DirectSiteControlsProps> = ({
           Max Pages:
         </label>
         <input
-          type="number"
-          min="1"
-          max="500"
-          value={maxPages}
-          onChange={(e) =>
-            setMaxPages(
-              Math.max(1, Math.min(500, parseInt(e.target.value) || 15))
-            )
-          }
+          type="text"
+          value={maxPages.toString()}
+          onChange={(e) => {
+            const value = e.target.value;
+            // Allow empty or numeric input
+            if (value === "" || /^\d+$/.test(value)) {
+              const num = parseInt(value) || 0;
+              setMaxPages(num);
+            }
+          }}
+          onBlur={(e) => {
+            // Validate on blur to ensure it's within range
+            const value = parseInt(e.target.value) || 15;
+            setMaxPages(Math.max(1, Math.min(500, value)));
+          }}
+          placeholder="15"
           className="w-[70px] p-2 bg-white/5 border border-glass-border rounded-lg text-white text-sm focus:outline-none focus:border-accent-color transition-colors"
         />
         <button

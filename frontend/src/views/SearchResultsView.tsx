@@ -1,9 +1,11 @@
-import React from "react";
-import { useOutletContext, useLocation } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
+import { useAppSelector } from "../store/hooks";
 import SearchResultItem, {
   type SearchResult,
 } from "../components/SearchResultItem";
 import AIAnswerCard from "../components/AIAnswerCard";
+
+import ScrapeFormatSelector from "../components/ScrapeFormatSelector";
 
 interface OutletContextType {
   query: string;
@@ -27,11 +29,30 @@ const SearchResultsView: React.FC = () => {
     handleScrape,
     aiAnswer,
   } = useOutletContext<OutletContextType>();
-  const location = useLocation();
-  const isLive = location.pathname.includes("live");
+
+  const mode = useAppSelector((state) => state.search.mode);
+  const isLive = mode === "live";
+
+  /* isLive logic is now: const isLive = mode === 'live'; but let's replace the whole header text part */
 
   return (
     <div className="w-full max-w-4xl mx-auto">
+      <div className="mb-6 flex justify-between items-center">
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = "/";
+          }}
+          className="text-text-secondary hover:text-white flex items-center gap-2 transition-colors cursor-pointer"
+        >
+          <span>←</span> Back to Home
+        </a>
+
+        <ScrapeFormatSelector />
+      </div>
+
       <p className="text-center text-sm text-text-secondary mb-8 fade-in">
         {isLive
           ? "Uses DuckDuckGo to browse the global internet."

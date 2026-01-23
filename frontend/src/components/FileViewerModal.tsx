@@ -22,8 +22,9 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   content,
   onClose,
   isLoading,
-  onFormatChange,
 }) => {
+  const [copyStatus, setCopyStatus] = React.useState("Copy");
+
   React.useEffect(() => {
     if (content) {
       document.body.style.overflow = "hidden";
@@ -42,6 +43,38 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   }
   tabs.push({ id: "json", label: "JSON" });
   tabs.push({ id: "md", label: "Markdown" });
+
+  const handleCopy = async () => {
+    if (!content.content) return;
+
+    // If metadata view, we might want to copy the raw object or the stringified version.
+    // The renderContent logic stringifies it.
+    // Let's copy exactly what is being shown or the raw content if string.
+
+    let textToCopy = content.content;
+    if (content.format === "metadata" || content.format === "json") {
+      try {
+        if (
+          typeof textToCopy === "string" &&
+          (textToCopy.startsWith("{") || textToCopy.startsWith("["))
+        ) {
+          const obj = JSON.parse(textToCopy);
+          textToCopy = JSON.stringify(obj, null, 2);
+        } else if (typeof textToCopy === "object") {
+          textToCopy = JSON.stringify(textToCopy, null, 2);
+        }
+      } catch (e) {}
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopyStatus("Copied!");
+      setTimeout(() => setCopyStatus("Copy"), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+      setCopyStatus("Error");
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -104,20 +137,30 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
             </h2>
           </div>
 
-          <div className="flex gap-2 bg-white/5 p-1 rounded-lg">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => onFormatChange(tab.id)}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
-                  content.format === tab.id
-                    ? "bg-accent-color text-bg-color shadow-sm"
-                    : "bg-transparent text-text-secondary hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex gap-2 items-center">
+            {/* <div className="flex gap-2 bg-white/5 p-1 rounded-lg mr-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => onFormatChange(tab.id)}
+                  className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
+                    content.format === tab.id
+                      ? "bg-accent-color text-bg-color shadow-sm"
+                      : "bg-transparent text-text-secondary hover:text-white"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div> */}
+
+            <button
+              onClick={handleCopy}
+              className="glass-button px-4 py-1.5 text-sm flex items-center gap-2"
+            >
+              <span>{copyStatus}</span>
+              {copyStatus === "Copy" && <span>📋</span>}
+            </button>
           </div>
 
           <button

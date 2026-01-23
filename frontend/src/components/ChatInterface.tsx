@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -37,7 +38,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Chat Messages Container */}
-      <div className="glass-card p-6 mb-4 min-h-[500px] max-h-[600px] overflow-y-auto">
+      <div className="glass-card p-6 mb-4 h-[300px] overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-text-secondary">
             <div className="text-6xl mb-4">💬</div>
@@ -69,10 +70,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <span className="text-lg">
                       {message.role === "user" ? "👤" : "🤖"}
                     </span>
-                    <div className="flex-1">
-                      <p className="text-sm whitespace-pre-wrap wrap-break-word">
-                        {message.content}
-                      </p>
+                    <div className="flex-1 overflow-hidden">
+                      <div
+                        className={`text-sm ${message.role === "assistant" ? "markdown-viewer" : "whitespace-pre-wrap"}`}
+                      >
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>

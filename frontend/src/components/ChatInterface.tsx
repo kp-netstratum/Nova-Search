@@ -36,9 +36,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full mx-auto px-20 h-full">
       {/* Chat Messages Container */}
-      <div className="glass-card p-6 mb-4 h-[300px] overflow-y-auto">
+      <div className="glass-card p-6 mb-4 h-[70vh] overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-text-secondary">
             <div className="text-6xl mb-4">💬</div>
@@ -127,11 +127,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </button>
           </div>
         </div>
-        {!targetSite && (
+        {/* {!targetSite && (
           <p className="text-xs text-text-secondary mt-2 text-center">
             Please crawl a site first before chatting
           </p>
-        )}
+        )} */}
       </form>
     </div>
   );

@@ -5,11 +5,11 @@ import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import "./index.css";
 import { type SearchResult } from "./components/SearchResultItem";
 import FileViewerModal from "./components/FileViewerModal";
-import SearchControls from "./components/SearchControls";
 import SearchResultsView from "./views/SearchResultsView";
 import SiteSearchView from "./views/SiteSearchView";
 import ChatView from "./views/ChatView";
 import HomeView from "./views/HomeView";
+import Sidebar from "./components/Sidebar";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import {
   setQuery,
@@ -23,6 +23,7 @@ import {
   addMessage,
   updateLastAssistantMessage,
   removeLastMessage,
+  setCurrentSessionId,
 } from "./store/searchSlice";
 import {
   openModal,
@@ -31,27 +32,6 @@ import {
   performScrape,
 } from "./store/uiSlice";
 import { SmartScraper } from "./views/SmartScraper";
-
-// Interface for props passed to Layout/Outlet
-// Note: With Redux, many of these props might not need to be passed down if child components connect to Redux directly.
-// But for now, keeping the Layout structure similar or refactoring it to just be a layout.
-// Since SearchControls can now connect to Redux, we don't need to pass setResults/setStatus.
-// However, the Views (SearchResultsView, etc) use `useOutletContext`. We need to see if they consume these props.
-
-// Let's verify what `useOutletContext` expects in the Views.
-// If they rely on this context, we must provide it or refactor them too.
-// I will provide a minimal context or update them later.
-// Ideally, Views should also use selectors. For this refactor, I will keep the context providing values from Redux
-// so that I don't break the Views immediately, but I'll mark them for update if needed.
-// Actually, `useOutletContext` is generic.
-// Let's assume Views use the props. Providing them from Redux state is the safest transitional step.
-
-// Rewriting Layout to use Redux hooks directly doesn't fundamentally change how children receive data
-// if we don't change the children.
-// But `Outlet` context is used.
-// Let's check `SearchResultsView` and `SiteSearchView` usage.
-// Since I cannot check them in this turn, I will assume they use the context.
-// I will reconstruct the context object using Redux state and dispatchers.
 
 function Layout() {
   const dispatch = useAppDispatch();
@@ -87,15 +67,8 @@ function Layout() {
   };
 
   const handleScrapeWrapper = (url: string) => {
-    // Logic for scrape is now in UI slice or handled by dispatching UI actions
-    // original handleScrape setups viewerContent and calls fetch.
-    // We can move this logic to a thunk or just dispatch openModal with initial state and then fetch?
-    // In uiSlice, I created `performScrape` thunk.
-    dispatch(setQuery("")); // Just a placeholder, actually performScrape doesn't need query.
-    // Wait, performScrape thunk needs to be dispatched.
-    // It sets isModalLoading, traverses api.
+    dispatch(setQuery(""));
 
-    // We need to dispatch openModal first?
     dispatch(
       openModal({
         content: "",
@@ -126,7 +99,6 @@ function Layout() {
     return "live";
   };
 
-  const isResultsPage = location.pathname.includes("/results");
   const isChatPage = location.pathname.includes("/chat");
 
   // Chat Streaming Logic (keeping it here for now but updating Redux state)
@@ -135,7 +107,12 @@ function Layout() {
     dispatch(addMessage(userMessage));
 
     try {
-      const response = await fetch(`${config.API_BASE_URL}/chat/site`, {
+      const chatUrl = new URL(`${config.API_BASE_URL}/chat/site`);
+      if (searchState.currentSessionId) {
+        chatUrl.searchParams.append("session_id", searchState.currentSessionId);
+      }
+
+      const response = await fetch(chatUrl.toString(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -161,14 +138,26 @@ function Layout() {
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
-              const data = JSON.parse(line.slice(6));
-              if (data.content) {
-                assistantMessage += data.content;
-                dispatch(updateLastAssistantMessage(assistantMessage));
-              } else if (data.done) {
-                break;
-              } else if (data.error) {
-                throw new Error(data.error);
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (
+                  data.sessionId &&
+                  data.sessionId !== searchState.currentSessionId
+                ) {
+                  dispatch(setCurrentSessionId(data.sessionId));
+                }
+
+                if (data.content) {
+                  assistantMessage += data.content;
+                  dispatch(updateLastAssistantMessage(assistantMessage));
+                } else if (data.done) {
+                  break;
+                } else if (data.error) {
+                  throw new Error(data.error);
+                }
+              } catch (e) {
+                console.error("JSON parse error in stream:", e);
               }
             }
           }
@@ -183,9 +172,6 @@ function Layout() {
     }
   };
 
-  // Constructing the context object to match what Views might expect.
-  // Explicitly mapping Redux dispatchers to the setter names expected by current views if possible.
-  // If Views use `setResults`, we pass `(r) => dispatch(setResults(r))`.
   const contextValue = {
     query,
     setQuery: (q: string) => dispatch(setQuery(q)),
@@ -208,36 +194,27 @@ function Layout() {
     handleScrape: handleScrapeWrapper,
     handleCrawl: handleCrawlWrapper,
     handleChatMessage: handleChatMessageWrapper,
+    setCurrentSessionId: (id: string | null) =>
+      dispatch(setCurrentSessionId(id)),
   };
 
   return (
-    <div className="glass-container w-[1200px] relative fade-in mx-auto px-12 min-h-fit py-20 flex flex-col">
-      {!isResultsPage && !isChatPage && (
-        <>
-          <header className="text-center mb-8">
-            <h1 className="text-6xl font-bold mb-2 bg-linear-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent tracking-tight">
-              Smart Scraper
-            </h1>
-            <p className="text-text-secondary text-lg">
-              Intelligent Search & Crawling Agent
-            </p>
-          </header>
+    <div className="flex w-screen h-screen overflow-hidden bg-bg-color text-text-primary font-main">
+      <Sidebar />
+      <main className="flex-1 flex flex-col min-w-0 bg-transparent relative">
+        <div className="flex-1 overflow-y-auto px-8 py-5">
+          <Outlet context={contextValue} />
+        </div>
 
-          <SearchControls />
-        </>
-      )}
-
-      <Outlet context={contextValue} />
-
-      {!isChatPage && (
-        <footer className="mt-auto text-center text-text-secondary text-sm pt-8">
-          <p>
-            &copy; {new Date().getFullYear()} Nova Search Agent. All rights
-            reserved.
-          </p>
-          <p>Build Number: 220126.1.0.0</p>
-        </footer>
-      )}
+        {!isChatPage && (
+          <footer className="px-8 py-4 text-center text-text-secondary text-[10px] border-t border-glass-border bg-white/2 backdrop-blur-sm">
+            <span>
+              &copy; {new Date().getFullYear()} Nova Search Agent. Build
+              220126.1.0.0
+            </span>
+          </footer>
+        )}
+      </main>
     </div>
   );
 }

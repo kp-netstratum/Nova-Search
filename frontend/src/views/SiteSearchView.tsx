@@ -68,11 +68,15 @@ const SiteSearchView: React.FC = () => {
   // };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <p className="text-center text-sm text-text-secondary mb-8 fade-in">
-        Crawls the entire website, stores data locally, then chat with the
-        content using AI.
-      </p>
+    <div className="max-w-4xl mx-auto fade-in h-full flex flex-col justify-center">
+      <div className="mb-10 text-center">
+        <h2 className="text-5xl font-bold mb-4 bg-linear-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
+          Direct Site Search
+        </h2>
+        <p className="text-text-secondary">
+          Enter a URL to crawl and index its content for AI chatting.
+        </p>
+      </div>
 
       <DirectSiteControls
         targetSite={targetSite}

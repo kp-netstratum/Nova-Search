@@ -28,8 +28,11 @@ interface SearchState {
   maxPages: number;
   aiAnswer: string | null;
   messages: Message[];
-  cache: Record<string, SearchResult[]>; // Simple cache: 'mode:query' -> results
+  cache: Record<string, SearchResult[]>;
   crawlHistory: CrawlHistoryItem[];
+  currentSessionId: string | null;
+  chatSessions: any[];
+  siteHistory: any[];
 }
 
 const initialState: SearchState = {
@@ -45,6 +48,9 @@ const initialState: SearchState = {
   messages: [],
   cache: {},
   crawlHistory: [],
+  currentSessionId: null,
+  chatSessions: [],
+  siteHistory: [],
 };
 
 // --- Thunks ---
@@ -125,22 +131,60 @@ export const performCrawl = createAsyncThunk(
   },
 );
 
-export const sendChatMessage = createAsyncThunk(
-  "search/sendChatMessage",
-  async (_args: { message: string; site: string; history: Message[] }, {}) => {
-    // This is a streaming response in App.tsx. Thunks are not great for streaming unless we dispatch updates.
-    // For now, let's just handle the initial request or we might need a custom middleware or just keep streaming logic in component for now?
-    // The user asked to use Redux to make working more efficient. Streaming in Redux is possible but verbose.
-    // Let's keep the streaming logic in the component for now, OR valid approach:
-    // Dispatch "startChat", then component subscribes?
-    // Or pass a callback?
-    // Let's keep chat in component or move to a custom hook that uses Redux for storage but local stream handling.
-    // Better: We can store the messages in Redux.
+export const fetchChatSessions = createAsyncThunk(
+  "search/fetchChatSessions",
+  async (_, { rejectWithValue }) => {
+    try {
+      const resp = await fetch(`${config.API_BASE_URL}/history/chats`);
+      return await resp.json();
+    } catch (err) {
+      return rejectWithValue("Failed to fetch chat sessions");
+    }
+  },
+);
 
-    // Since the user specifically asked for "minimize api calls", Redux helps with caching search results.
-    // Chat streaming is efficient by nature (connection kept open).
-    // We will just store the messages in Redux.
-    return null; // Placeholder as we might not move the full streaming logic into a Standard Thunk easily.
+export const fetchChatMessages = createAsyncThunk(
+  "search/fetchChatMessages",
+  async (sessionId: string, { rejectWithValue }) => {
+    try {
+      const resp = await fetch(
+        `${config.API_BASE_URL}/history/chats/${sessionId}`,
+      );
+      return { sessionId, messages: await resp.json() };
+    } catch (err) {
+      return rejectWithValue("Failed to fetch messages");
+    }
+  },
+);
+
+export const fetchCrawlHistory = createAsyncThunk(
+  "search/fetchCrawlHistory",
+  async (_, { rejectWithValue }) => {
+    try {
+      const resp = await fetch(`${config.API_BASE_URL}/history/crawls`);
+      return await resp.json();
+    } catch (err) {
+      return rejectWithValue("Failed to fetch crawl history");
+    }
+  },
+);
+
+export const deleteCrawlHistory = createAsyncThunk(
+  "search/deleteCrawlHistory",
+  async (url: string, { rejectWithValue, dispatch }) => {
+    try {
+      const resp = await fetch(
+        `${config.API_BASE_URL}/history/crawls?url=${encodeURIComponent(url)}`,
+        { method: "DELETE" },
+      );
+      if (!resp.ok) throw new Error("Failed to delete crawl history");
+      // Refresh crawl history and chat sessions after deletion
+      dispatch(fetchCrawlHistory());
+      dispatch(fetchChatSessions());
+      return url;
+    } catch (err) {
+      return rejectWithValue("Failed to delete records");
+    }
   },
 );
 
@@ -188,6 +232,15 @@ const searchSlice = createSlice({
       state.messages = [];
       state.status = "";
       state.aiAnswer = null;
+      state.currentSessionId = null;
+    },
+    resetCurrentSession(state) {
+      state.messages = [];
+      state.currentSessionId = null;
+      state.status = "";
+    },
+    setCurrentSessionId(state, action: PayloadAction<string | null>) {
+      state.currentSessionId = action.payload;
     },
     addToCrawlHistory(state, action: PayloadAction<CrawlHistoryItem>) {
       // Avoid duplicates - check if URL already exists
@@ -310,6 +363,24 @@ const searchSlice = createSlice({
       .addCase(performCrawl.rejected, (state, action) => {
         state.isCrawling = false;
         state.status = action.payload as string;
+      })
+      // Sessions
+      .addCase(fetchChatSessions.fulfilled, (state, action) => {
+        state.chatSessions = action.payload;
+      })
+      .addCase(fetchChatMessages.fulfilled, (state, action) => {
+        state.currentSessionId = action.payload.sessionId;
+        state.messages = action.payload.messages;
+      })
+      .addCase(fetchCrawlHistory.fulfilled, (state, action) => {
+        state.siteHistory = action.payload;
+      })
+      .addCase(deleteCrawlHistory.fulfilled, (state, action) => {
+        state.status = `Successfully removed records for ${action.payload}`;
+        if (state.targetSite === action.payload) {
+          state.targetSite = "";
+          state.messages = [];
+        }
       });
   },
 });
@@ -329,6 +400,8 @@ export const {
   addToCrawlHistory,
   removeFromCrawlHistory,
   loadCrawlFromHistory,
+  setCurrentSessionId,
+  resetCurrentSession,
 } = searchSlice.actions;
 
 export default searchSlice.reducer;

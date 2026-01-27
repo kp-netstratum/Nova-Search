@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import config from "./config";
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 
@@ -32,6 +33,9 @@ import {
   performScrape,
 } from "./store/uiSlice";
 import { SmartScraper } from "./views/SmartScraper";
+
+import { verifyToken } from "./auth/auth.v2";
+import LoginPage from "./views/Login";
 
 function Layout() {
   const dispatch = useAppDispatch();
@@ -219,17 +223,55 @@ function Layout() {
   );
 }
 
+// Login component placeholder - update import when file is created
+// const Login = () => <div>Login Page (Placeholder)</div>;
+
+const ProtectedRoute = ({
+  isAuthenticated,
+  children,
+}: {
+  isAuthenticated: string;
+  children: React.ReactNode;
+}) => {
+  if (isAuthenticated === "LOADING") {
+    return (
+      <div className="flex items-center justify-center w-full h-[100vh]">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isAuthenticated === "FAILED") {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
 function App() {
   const dispatch = useAppDispatch();
   const uiState = useAppSelector((state) => state.ui);
   const { viewerContent, isModalLoading } = uiState;
 
+  const [isAuthenticated, setIsAuthenticated] = useState<string>("LOADING");
+
   const handleFormatChange = (newFormat: any) => {
     if (viewerContent) {
-      // @ts-ignore
-      dispatch(switchViewFormat({ newFormat, currentContent: viewerContent }));
+      dispatch(
+        // @ts-ignore
+        switchViewFormat({ newFormat, currentContent: viewerContent }),
+      );
     }
   };
+
+  const init = async () => {
+    const res = await verifyToken();
+    setIsAuthenticated(res ? "SUCCESS" : "FAILED");
+  };
+
+  useEffect(() => {
+    init();
+  }, []);
 
   return (
     <>
@@ -241,14 +283,25 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={<Layout />}>
+        {/* 🔐 Protected App */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/live" replace />} />
           <Route path="live" element={<HomeView />} />
           <Route path="results" element={<SearchResultsView />} />
           <Route path="site" element={<SiteSearchView />} />
           <Route path="chat" element={<ChatView />} />
+          <Route path="smartscraper" element={<SmartScraper />} />
         </Route>
-        <Route path="smartscraper" element={<SmartScraper />} />
+
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </>
   );

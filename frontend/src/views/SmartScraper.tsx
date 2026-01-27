@@ -110,7 +110,7 @@ export const SmartScraper = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen w-[100vw] bg-slate-900 p-4">
+    <div className="flex items-center justify-center">
       <div className="flex items-center justify-start gap-4 w-full">
         <div className="flex flex-col gap-4 w-full h-[90vh] overflow-y-auto rounded-2xl">
           {/* Search Header */}

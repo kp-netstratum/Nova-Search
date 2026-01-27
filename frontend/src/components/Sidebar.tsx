@@ -1,30 +1,84 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../store/hooks";
 import { setResults, setStatus } from "../store/searchSlice";
-import { BotMessageSquare, Radar, ScanSearch } from "lucide-react";
+import {
+  Atom,
+  BotMessageSquare,
+  Radar,
+  ScanSearch,
+  LogOut,
+} from "lucide-react";
+import { getTokenFromLocalStorage, tryLogout } from "../auth/auth.v2";
 
 const Sidebar: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Decode JWT token to extract user information
+  const decodeJWT = (token: string): any => {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
+    }
+  };
+
+  // Extract user email from token on component mount
+  useEffect(() => {
+    const tokenInfo = getTokenFromLocalStorage();
+    if (tokenInfo && tokenInfo.access_token) {
+      const decodedToken = decodeJWT(tokenInfo.access_token);
+      if (decodedToken) {
+        // Keycloak typically stores email in 'email' field
+        setUserEmail(
+          decodedToken.email || decodedToken.preferred_username || "User",
+        );
+      }
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    const success = await tryLogout();
+    if (success) {
+      navigate("/login");
+    }
+  };
 
   const navItems = [
     {
       path: "/live",
       label: "Live Search",
-      icon: <ScanSearch/>,
+      icon: <ScanSearch />,
       desc: "Search the global internet",
     },
     {
       path: "/site",
       label: "Direct Site",
-      icon: <Radar/>,
+      icon: <Radar />,
       desc: "Crawl and index a specific site",
     },
     {
       path: "/chat",
       label: "Chat",
-      icon: <BotMessageSquare/>,
+      icon: <BotMessageSquare />,
       desc: "Chat with crawled content",
+    },
+    {
+      path: "/smartscraper",
+      label: "Smart Scraper",
+      icon: <Atom />,
+      desc: "Smartly scrape content from a website",
     },
   ];
 
@@ -35,7 +89,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-64 h-screen sticky top-0 bg-white/5 backdrop-blur-2xl border-r border-glass-border flex flex-col p-6 z-50">
-      <div className="mb-10">
+      <div className="mb-4">
         <div className="flex items-center gap-2">
           <img src="/public/favicon.png" alt="logo" className="w-6 h-6" />
           <h1 className="text-2xl font-bold bg-linear-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent tracking-tight">
@@ -80,15 +134,34 @@ const Sidebar: React.FC = () => {
         ))}
       </nav>
 
-      {/* <div className="mt-auto pt-6 border-t border-glass-border">
-        <p className="text-[10px] text-text-secondary uppercase tracking-widest font-bold mb-2">
-          System Status
-        </p>
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Agent Ready</span>
-        </div>
-      </div> */}
+      <div className="mt-auto pt-6 border-t border-glass-border">
+        {/* User Profile Section */}
+        {userEmail && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-sky-400 to-indigo-400 flex items-center justify-center text-white font-semibold shadow-lg">
+                {userEmail.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-text-secondary">Logged in as</p>
+                <p
+                  className="text-sm font-medium text-white truncate"
+                  title={userEmail}
+                >
+                  {userEmail}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-300 border border-red-500/20"
+            >
+              <LogOut size={16} />
+              <span className="text-sm font-medium">Logout</span>
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   );
 };

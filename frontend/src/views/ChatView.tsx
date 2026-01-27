@@ -106,7 +106,7 @@ const ChatView: React.FC = () => {
   return (
     <div className="mx-auto fade-in flex h-full gap-6">
       {/* History Sidebar */}
-      <div className="w-72 flex flex-col gap-4 overflow-y-auto pr-2 border-r border-glass-border">
+      <div className="w-72 flex flex-col gap-4 overflow-y-auto pr-4 border-r border-glass-border">
         <div className="flex flex-col gap-4">
           <div>
             <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-3">
